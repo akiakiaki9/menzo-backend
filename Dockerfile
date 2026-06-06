@@ -14,13 +14,5 @@ COPY . .
 
 RUN mkdir -p /app/static /app/staticfiles /media
 
-# Временно закомментировать collectstatic
-# RUN python manage.py collectstatic --noinput
-
-# Создаем скрипт запуска
-RUN echo '#!/bin/bash\n\
-python manage.py migrate --noinput\n\
-python manage.py collectstatic --noinput --ignore=node_modules\n\
-gunicorn --bind 0.0.0.0:8000 core.wsgi:application' > /app/start.sh && chmod +x /app/start.sh
-
-CMD ["/app/start.sh"]
+# Запускаем миграции и сервер
+CMD python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 core.wsgi:application
