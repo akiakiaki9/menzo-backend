@@ -12,9 +12,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/static /app/staticfiles /app/media
+RUN mkdir -p /app/static /app/staticfiles /media
+RUN python manage.py collectstatic --noinput
 
-# Временно закомментируйте эту строку:
-# RUN python manage.py collectstatic --noinput
+# Создаем скрипт запуска
+RUN echo '#!/bin/bash\n\
+python manage.py migrate --noinput\n\
+gunicorn --bind 0.0.0.0:8000 core.wsgi:application' > /app/start.sh && chmod +x /app/start.sh
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]
+CMD ["/app/start.sh"]

@@ -1,16 +1,17 @@
 services:
   - type: web
     name: menzo-backend-main
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn core.wsgi:application
+    runtime: image  # Важно! Не "python", а "image"
+    repo: https://github.com/ваш-репозиторий  # URL репозитория
+    branch: main
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: menzo-db
           property: connectionString
       - key: DEBUG
-        value: "False"
+        value: "True"
       - key: SECRET_KEY
         value: "menzo_secret_key_2024_12345"
       - key: ALLOWED_HOSTS
@@ -19,9 +20,3 @@ services:
         value: "8574008500:AAFCSuMbcylAhIeWyXZBMfm-Zv7HcJ-8kVo"
       - key: TELEGRAM_CHAT_ID
         value: "5919683861"
-    preDeployCommand: "python manage.py migrate --noinput"
-
-databases:
-  - name: menzo-db
-    databaseName: menzo_db
-    user: menzo_user
