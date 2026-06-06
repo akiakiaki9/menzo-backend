@@ -1,0 +1,12 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if original %}
+    <li>
+        <a href="{% url 'admin:restaurant_menu_management' original.id %}" class="button" style="background: #e67e22; color: white;">
+            🍽️ Управление меню
+        </a>
+    </li>
+    {% endif %}
+{% endblock %}

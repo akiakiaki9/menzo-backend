@@ -1,0 +1,198 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Управление меню: {{ restaurant.name }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .menu-management-container {
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .menu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .menu-header h1 {
+        margin: 0;
+    }
+    .add-category-btn {
+        background: #e67e22;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .category-card {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .category-header {
+        background: #f8f9fa;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+    }
+    .category-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .category-title h3 {
+        margin: 0;
+    }
+    .category-actions a {
+        margin-left: 10px;
+        text-decoration: none;
+        color: #666;
+    }
+    .category-actions a:hover {
+        color: #e67e22;
+    }
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .items-table th,
+    .items-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    .items-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+    .add-item-link {
+        display: inline-block;
+        margin: 10px;
+        padding: 5px 10px;
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+    .empty-items {
+        padding: 20px;
+        text-align: center;
+        color: #999;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #e67e22;
+        text-decoration: none;
+    }
+    .item-image {
+        max-width: 40px;
+        max-height: 40px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-management-container">
+    <div class="menu-header">
+        <h1>Управление меню: {{ restaurant.name }}</h1>
+        <a href="{% url 'admin:api_menucategory_add' %}?restaurant={{ restaurant.id }}" class="add-category-btn">
+            + Добавить категорию
+        </a>
+    </div>
+    
+    <div class="categories-grid">
+        {% for category in categories %}
+        <div class="category-card">
+            <div class="category-header">
+                <div class="category-title">
+                    {% if category.image %}
+                    <img src="{{ category.image.url }}" style="width: 40px; height: 40px; border-radius: 5px; object-fit: cover;">
+                    {% else %}
+                    <span style="font-size: 24px;">{{ category.icon|default:"🍽️" }}</span>
+                    {% endif %}
+                    <h3>{{ category.name }}</h3>
+                </div>
+                <div class="category-actions">
+                    <a href="{% url 'admin:api_menucategory_change' category.id %}">✏️</a>
+                    <a href="{% url 'admin:api_menucategory_delete' category.id %}" style="color: #dc3545;">🗑️</a>
+                </div>
+            </div>
+            
+            <div style="padding: 10px;">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Фото</th>
+                            <th>Название</th>
+                            <th>Цена</th>
+                            <th>Хит</th>
+                            <th>Порядок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in category.menu_items.all|dictsort:"order" %}
+                        <tr>
+                            <td>
+                                {% if item.image %}
+                                <img src="{{ item.image.url }}" class="item-image">
+                                {% else %}
+                                <span style="color: #999;">📷</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.price|floatformat:"0" }} сум</td>
+                            <td>{% if item.is_recommended %}⭐{% else %}—{% endif %}</td>
+                            <td>{{ item.order }}</td>
+                            <td>
+                                <a href="{% url 'admin:api_menuitem_change' item.id %}" style="margin-right: 10px;">✏️</a>
+                                <a href="{% url 'admin:api_menuitem_delete' item.id %}" style="color: #dc3545;">🗑️</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="empty-items">
+                                Нет блюд в этой категории
+                                <a href="{% url 'admin:api_menuitem_add' %}?category={{ category.id }}" class="add-item-link">+ Добавить блюдо</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if category.menu_items.exists %}
+                <div style="text-align: right; padding: 10px;">
+                    <a href="{% url 'admin:api_menuitem_add' %}?category={{ category.id }}" class="add-item-link">+ Добавить блюдо</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 50px; background: #f8f9fa; border-radius: 10px;">
+            <p>Нет категорий меню</p>
+            <a href="{% url 'admin:api_menucategory_add' %}?restaurant={{ restaurant.id }}" class="add-category-btn">
+                + Создать первую категорию
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <a href="{% url 'admin:api_restaurant_change' restaurant.id %}" class="back-link">← Вернуться к ресторану</a>
+</div>
+{% endblock %}

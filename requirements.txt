@@ -1,0 +1,13 @@
+Django==5.1.2
+djangorestframework==3.15.1
+django-cors-headers==4.4.0
+django-unfold==0.9.0
+Pillow==10.3.0
+python-dotenv==1.0.1
+pytz==2024.1
+requests==2.32.3
+gunicorn==22.0.0
+psycopg2-binary==2.9.9
+django-admin-ordering==0.2.0
+dj-database-url==2.1.0
+whitenoise==6.6.0
