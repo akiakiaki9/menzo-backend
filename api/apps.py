@@ -7,17 +7,23 @@ class ApiConfig(AppConfig):
     
     def ready(self):
         import os
-        if os.environ.get('RUN_MAIN', None) != 'true':
+        # Проверяем, что это основной процесс, а не авто-перезагрузчик
+        if os.environ.get('RUN_MAIN', None) == 'true':
             return
         
         # Автоматическое создание суперпользователя
         from django.contrib.auth import get_user_model
         User = get_user_model()
         
-        if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser(
-                username='admin',
-                email='admin@example.com',
-                password='admin123'
-            )
-            print("✅ Superuser created automatically!")
+        try:
+            if not User.objects.filter(username='superadmin').exists():
+                User.objects.create_superuser(
+                    username='superadmin',
+                    email='tillayevakbarshoh@gmail.com',
+                    password='Admin123456'
+                )
+                print("✅ Superuser created automatically!")
+            else:
+                print("ℹ️ Superuser already exists")
+        except Exception as e:
+            print(f"⚠️ Error creating superuser: {e}")

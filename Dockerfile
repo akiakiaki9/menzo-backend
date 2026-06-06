@@ -14,10 +14,4 @@ COPY . .
 
 RUN mkdir -p /app/static /app/staticfiles /media
 
-# Создаем скрипт запуска
-RUN echo '#!/bin/bash\n\
-python manage.py migrate --noinput\n\
-python manage.py create_superuser\n\
-gunicorn --bind 0.0.0.0:8000 core.wsgi:application' > /app/start.sh && chmod +x /app/start.sh
-
-CMD ["/app/start.sh"]
+CMD python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 core.wsgi:application
