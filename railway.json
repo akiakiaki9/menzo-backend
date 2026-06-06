@@ -4,7 +4,7 @@
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
-    "startCommand": "gunicorn",
+    "startCommand": "gunicorn core.wsgi:application",
     "healthcheckPath": "/api/restaurants/",
     "restartPolicyType": "ON_FAILURE"
   }
