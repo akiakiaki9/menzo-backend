@@ -1,28 +1,17 @@
 services:
   - type: web
     name: menzo-backend-main
-    runtime: image
-    repo: https://github.com/ваш-репозиторий
+    runtime: image  # Важно! Не "python", а "image"
+    repo: https://github.com/ваш-репозиторий  # URL репозитория
     branch: main
     dockerfilePath: ./Dockerfile
-    preDeployCommand: |
-      python manage.py migrate --noinput
-      python manage.py shell << EOF
-      from django.contrib.auth import get_user_model
-      User = get_user_model()
-      if not User.objects.filter(username='superadmin').exists():
-          User.objects.create_superuser('superadmin', 'tillayevakbarshoh@gmail.com', 'Admin123456')
-          print('✅ Superuser created')
-      else:
-          print('⚠️ Superuser already exists')
-      EOF
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: menzo-db
           property: connectionString
       - key: DEBUG
-        value: "False"
+        value: "True"
       - key: SECRET_KEY
         value: "menzo_secret_key_2024_12345"
       - key: ALLOWED_HOSTS
