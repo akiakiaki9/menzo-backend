@@ -15,6 +15,18 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    
+    # АВТОМАТИЧЕСКИЕ МИГРАЦИИ ДЛЯ RENDER
+    if 'runserver' not in sys.argv and 'gunicorn' in sys.argv:
+        from django.core.management import call_command
+        import sys
+        print("=" * 50)
+        print("🔄 Running migrations on startup...")
+        print("=" * 50)
+        call_command('migrate', '--noinput')
+        print("✅ Migrations completed!")
+        print("=" * 50)
+    
     execute_from_command_line(sys.argv)
 
 
