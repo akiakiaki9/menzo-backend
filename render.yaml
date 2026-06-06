@@ -11,7 +11,7 @@ services:
       from django.contrib.auth import get_user_model
       User = get_user_model()
       if not User.objects.filter(username='superadmin').exists():
-          User.objects.create_superuser('superadmin', 'tillayevakbarshoh@gmail.com', '151204Akbar999+*%')
+          User.objects.create_superuser('superadmin', 'tillayevakbarshoh@gmail.com', 'Admin123456')
           print('✅ Superuser created')
       else:
           print('⚠️ Superuser already exists')
