@@ -14,6 +14,7 @@ COPY . .
 
 RUN mkdir -p /app/static /app/staticfiles /app/media
 
-RUN python manage.py collectstatic --noinput
+# Временно закомментируйте эту строку:
+# RUN python manage.py collectstatic --noinput
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]
