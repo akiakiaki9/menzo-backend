@@ -445,7 +445,7 @@ class RatingViewSet(viewsets.ViewSet):
 
 ━━━━━━━━━━━━━━━━━━━━━
 🕐 {tashkent_now.strftime('%d.%m.%Y %H:%M:%S')}
-📱 tavsia.uz
+📱 menzo.uz
 """
             
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -613,7 +613,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 ━━━━━━━━━━━━━━━━━━━━━
 🕐 {tashkent_now.strftime('%d.%m.%Y %H:%M:%S')}
-📱 tavsia.uz
+📱 menzo.uz
 """
             
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -819,7 +819,7 @@ class OrderAPIView(APIView):
 
 ━━━━━━━━━━━━━━━━━━━━━
 🕐 {tashkent_now.strftime('%d.%m.%Y %H:%M:%S')}
-📱 tavsia.uz
+📱 menzo.uz
 """
         
         bot_token = restaurant.telegram_bot_token or settings.TELEGRAM_BOT_TOKEN
