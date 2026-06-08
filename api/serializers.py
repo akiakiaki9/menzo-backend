@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from rest_framework import serializers
 from .models import (
     Restaurant, RestaurantImage, MenuItem, MenuCategory, Booking, 
@@ -106,7 +107,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
     is_published = serializers.BooleanField(read_only=True)
     is_menu_published = serializers.BooleanField(read_only=True)
     
-    analytics = RestaurantAnalyticsSerializer(read_only=True)
+    analytics = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
     rating_stats = serializers.SerializerMethodField()
     
     class Meta:
@@ -125,22 +127,66 @@ class RestaurantSerializer(serializers.ModelSerializer):
     def get_cuisines_list(self, obj):
         return obj.get_cuisines_list()
     
-    def get_rating_stats(self, obj):
+    def get_rating(self, obj):
+        stats = self._get_ratings_from_analytics(obj)
+        if stats['overall'] > 0:
+            return stats['overall']
+        return self._calculate_ratings(obj)['overall']
+    
+    def get_analytics(self, obj):
         analytics = getattr(obj, 'analytics', None)
-        if analytics:
-            return {
-                'overall': round(analytics.overall_rating, 1),
-                'food': round(analytics.food_avg, 1),
-                'service': round(analytics.service_avg, 1),
-                'atmosphere': round(analytics.atmosphere_avg, 1),
-                'total': analytics.total_ratings
-            }
+        if analytics and analytics.total_ratings and any((analytics.food_avg, analytics.service_avg, analytics.atmosphere_avg, analytics.overall_rating)):
+            return RestaurantAnalyticsSerializer(analytics).data
+        stats = self._calculate_ratings(obj)
         return {
-            'overall': obj.rating,
-            'food': 0,
-            'service': 0,
-            'atmosphere': 0,
-            'total': 0
+            'id': None,
+            'restaurant_name': obj.name,
+            'total_ratings': stats['total'],
+            'unique_raters': obj.ratings.values('session_key').distinct().count(),
+            'food_avg': stats['food'],
+            'service_avg': stats['service'],
+            'atmosphere_avg': stats['atmosphere'],
+            'overall_rating': stats['overall'],
+            'views_count': getattr(getattr(obj, 'analytics', None), 'views_count', 0),
+            'last_updated': getattr(getattr(obj, 'analytics', None), 'last_updated', None),
+            'restaurant': obj.id
+        }
+    
+    def get_rating_stats(self, obj):
+        stats = self._get_ratings_from_analytics(obj)
+        if stats['total'] > 0 and stats['overall'] > 0:
+            return stats
+        return self._calculate_ratings(obj)
+    
+    def _get_ratings_from_analytics(self, obj):
+        analytics = getattr(obj, 'analytics', None)
+        if not analytics:
+            return {'overall': 0, 'food': 0, 'service': 0, 'atmosphere': 0, 'total': 0}
+        return {
+            'overall': round(analytics.overall_rating, 1),
+            'food': round(analytics.food_avg, 1),
+            'service': round(analytics.service_avg, 1),
+            'atmosphere': round(analytics.atmosphere_avg, 1),
+            'total': analytics.total_ratings
+        }
+    
+    def _calculate_ratings(self, obj):
+        ratings = obj.ratings.all()
+        if not ratings.exists():
+            return {'overall': 0, 'food': 0, 'service': 0, 'atmosphere': 0, 'total': 0}
+
+        food_avg = ratings.filter(category__slug='food').aggregate(Avg('score'))['score__avg'] or 0
+        service_avg = ratings.filter(category__slug='service').aggregate(Avg('score'))['score__avg'] or 0
+        atmosphere_avg = ratings.filter(category__slug='atmosphere').aggregate(Avg('score'))['score__avg'] or 0
+        total = ratings.count()
+        overall = ratings.aggregate(Avg('score'))['score__avg'] or 0
+
+        return {
+            'overall': round(overall, 1),
+            'food': round(food_avg, 1),
+            'service': round(service_avg, 1),
+            'atmosphere': round(atmosphere_avg, 1),
+            'total': total
         }
 
 
