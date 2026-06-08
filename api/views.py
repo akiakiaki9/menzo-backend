@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.views import APIView
+from rest_framework.decorators import throttle_classes
 from django.conf import settings
 from django.db.models import Q, Count, Avg
 from django.utils import timezone
@@ -15,6 +16,7 @@ from .serializers import (
     RatingCategorySerializer, RestaurantRatingSerializer,
     RestaurantAnalyticsSerializer, CartSerializer, CartItemSerializer
 )
+from .throttles import FormRateThrottle
 import requests
 import hashlib
 import uuid
@@ -478,7 +480,7 @@ class RatingViewSet(viewsets.ViewSet):
         
         return Response(result)
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], throttle_classes=[FormRateThrottle])
     def rate(self, request, pk=None):
         session_key = self.get_session_key(request)
         
@@ -534,6 +536,7 @@ class RatingViewSet(viewsets.ViewSet):
 
 
 class BookingViewSet(viewsets.ModelViewSet):
+    throttle_classes = [FormRateThrottle]
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
     
@@ -768,6 +771,7 @@ class CartViewSet(viewsets.ViewSet):
 
 
 class OrderAPIView(APIView):
+    throttle_classes = [FormRateThrottle]
     """API для оформления заказа"""
     
     def post(self, request):

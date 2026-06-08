@@ -105,6 +105,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    # Throttling rates used by view-level throttles (scope -> rate)
+    'DEFAULT_THROTTLE_RATES': {
+        'form': '4/min',
+    },
 }
 
 # Telegram Bot Settings (читаем из .env)
