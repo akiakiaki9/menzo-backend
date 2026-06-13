@@ -200,7 +200,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
             restaurants = restaurants.filter(establishment_type=establishment_type)
         
         if sort_by == 'rating':
-            restaurants = sorted(restaurants, key=lambda x: x.rating, reverse=True)
+            restaurants = sorted(restaurants, key=lambda x: self.get_effective_restaurant_rating(x), reverse=True)
         elif sort_by == 'popular':
             restaurants = sorted(restaurants, key=lambda x: x.analytics.total_ratings if hasattr(x, 'analytics') else 0, reverse=True)
         elif sort_by == 'trending':
@@ -211,12 +211,13 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         
         result = []
         for r in restaurants:
+            rating_value = self.get_effective_restaurant_rating(r)
             result.append({
                 'id': r.id,
                 'name': r.name,
                 'slug': r.slug,
-                'rating': r.rating,
-                'overall_rating': r.analytics.overall_rating if hasattr(r, 'analytics') else r.rating,
+                'rating': rating_value,
+                'overall_rating': rating_value,
                 'price_level': r.price_level,
                 'cuisine_type': r.cuisine_type,
                 'cuisine_type_label': r.get_cuisine_type_display(),
@@ -404,6 +405,29 @@ class RatingViewSet(viewsets.ViewSet):
         restaurant = Restaurant.objects.get(id=restaurant_id)
         restaurant.rating = round(analytics.overall_rating, 1)
         restaurant.save()
+
+    def get_effective_restaurant_rating(self, restaurant):
+        analytics = getattr(restaurant, 'analytics', None)
+        if analytics and analytics.total_ratings and any((analytics.food_avg, analytics.service_avg, analytics.atmosphere_avg, analytics.overall_rating)):
+            return round(analytics.overall_rating, 1)
+
+        ratings = RestaurantRating.objects.filter(restaurant=restaurant)
+        if not ratings.exists():
+            return 0
+
+        food_avg = ratings.filter(category__slug='food').aggregate(Avg('score'))['score__avg'] or 0
+        service_avg = ratings.filter(category__slug='service').aggregate(Avg('score'))['score__avg'] or 0
+        atmosphere_avg = ratings.filter(category__slug='atmosphere').aggregate(Avg('score'))['score__avg'] or 0
+
+        food_weight = 1.5
+        service_weight = 1.2
+        atmosphere_weight = 1.0
+        total_weight = food_weight + service_weight + atmosphere_weight
+
+        return round(
+            ((food_avg * food_weight) + (service_avg * service_weight) + (atmosphere_avg * atmosphere_weight)) / total_weight,
+            1
+        )
     
     def send_telegram_review_to_restaurant(self, restaurant, ratings_data, customer_name, comment, is_update=False):
         """Отправляет уведомление о новом или обновлённом отзыве"""
